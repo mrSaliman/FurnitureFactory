@@ -1,0 +1,16 @@
+﻿@model FurnitureFactory.Areas.FurnitureFactory.ViewModels.ChangeRoleViewModel
+
+<h2>Changing roles for user @Model.UserEmail</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" name="userId" value="@Model.UserId"/>
+    <div class="btn-group">
+        @foreach (var role in Model.AllRoles)
+        {
+            <input type="radio" class="btn-check" name="roles" value="@role.Name" id="@role.Id"
+                   @(Model.UserRoles.Contains(role.Name) ? "checked=\"checked\"" : "")/>
+            <label class="btn btn-outline-primary" for="@role.Id">@role.Name</label>
+        }
+    </div>
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>

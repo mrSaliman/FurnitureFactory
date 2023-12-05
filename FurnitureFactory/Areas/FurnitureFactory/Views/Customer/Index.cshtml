@@ -1,0 +1,77 @@
+@model FurnitureFactory.Areas.FurnitureFactory.ViewModels.CustomerViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<form action="@Url.Action("Index", "Customer")" method="post">
+    CompanyName: @Html.TextBox("CompanyName", Model.CompanyName, new { style = "width: 100px;" })
+    RepresentativeLastName: @Html.TextBox("RepresentativeLastName", Model.RepresentativeLastName, new { style = "width: 100px;" })
+    RepresentativeFirstName: @Html.TextBox("RepresentativeFirstName", Model.RepresentativeFirstName, new { style = "width: 100px;" })
+    RepresentativeMiddleName: @Html.TextBox("RepresentativeMiddleName", Model.RepresentativeMiddleName, new { style = "width: 100px;" })
+    PhoneNumber: @Html.TextBox("PhoneNumber", Model.PhoneNumber, new { style = "width: 100px;" })
+    Address: @Html.TextBox("Address", Model.Address, new { style = "width: 100px;" })
+
+    <input type="submit" value="Найти"/>
+</form>
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.CompanyName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RepresentativeLastName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RepresentativeFirstName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RepresentativeMiddleName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.PhoneNumber)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Address)
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model.Customers)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CompanyName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RepresentativeLastName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RepresentativeFirstName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RepresentativeMiddleName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PhoneNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Address)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CustomerId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CustomerId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CustomerId">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<page-link page-model="@Model.PageViewModel" page-action="Index"></page-link>

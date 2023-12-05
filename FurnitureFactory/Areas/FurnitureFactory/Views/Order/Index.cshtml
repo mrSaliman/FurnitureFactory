@@ -1,0 +1,70 @@
+@model FurnitureFactory.Areas.FurnitureFactory.ViewModels.OrderViewModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<form action="@Url.Action("Index", "Order")" method="post">
+    OrderDate: <input asp-for="@Model.OrderDate" name="OrderDate" type="date" style="width: 100px;"></input>
+    SpecialDiscount: <input asp-for="@Model.SpecialDiscount" name="SpecialDiscount" step="any" style="width: 100px;"></input>
+    IsCompleted:<input asp-for="@Model.IsCompleted" name="IsCompleted" type="checkbox"></input>
+    CustomerCompanyName: @Html.TextBox("CustomerCompanyName", Model.CustomerCompanyName, new { style = "width: 100px;" })
+    ResponsibleEmployeeFirstName: @Html.TextBox("ResponsibleEmployeeFirstName", Model.ResponsibleEmployeeFirstName, new { style = "width: 100px;" })
+
+    <input type="submit" value="Найти"/>
+</form>
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.OrderDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.SpecialDiscount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.IsCompleted)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CustomerCompanyName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ResponsibleEmployeeFirstName)
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model.Orders)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.OrderDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SpecialDiscount)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsCompleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Customer.CompanyName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ResponsibleEmployee.FirstName)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.OrderId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.OrderId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.OrderId">Delete</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+<page-link page-model="@Model.PageViewModel" page-action="Index"></page-link>
