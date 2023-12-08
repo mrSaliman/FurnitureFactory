@@ -14,9 +14,9 @@ public class Order
 
     public int ResponsibleEmployeeId { get; set; }
 
-    public virtual Customer? Customer { get; set; }
+    public Customer? Customer { get; set; }
 
-    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+    public ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
-    public virtual Employee? ResponsibleEmployee { get; set; }
+    public Employee? ResponsibleEmployee { get; set; }
 }
