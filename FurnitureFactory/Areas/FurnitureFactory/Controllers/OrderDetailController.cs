@@ -1,10 +1,10 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
-using FurnitureFactory.Areas.FurnitureFactory.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -13,9 +13,9 @@ namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 public class OrderDetailController : Controller
 {
     private readonly AcmeDataContext _context;
-    private readonly FurnitureFactoryCacheService _cache;
+    private readonly IMemoryCache _cache;
 
-    public OrderDetailController(AcmeDataContext context, FurnitureFactoryCacheService cache)
+    public OrderDetailController(AcmeDataContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;
@@ -23,14 +23,14 @@ public class OrderDetailController : Controller
 
     public IActionResult Index()
     {
-        return View(_cache.GetOrderDetails());
+        return View(GetOrderDetails());
     }
 
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
 
-        var orderDetail = _cache.GetOrderDetails().FirstOrDefault(m => m.OrderDetailId == id);
+        var orderDetail = GetOrderDetails().FirstOrDefault(m => m.OrderDetailId == id);
         return orderDetail == null ? NotFound() : View(orderDetail);
     }
 
@@ -51,7 +51,7 @@ public class OrderDetailController : Controller
         {
             _context.Add(orderDetail);
             await _context.SaveChangesAsync();
-            _cache.SetOrderDetails();
+            SetOrderDetails();
             return RedirectToAction(nameof(Index));
         }
 
@@ -65,7 +65,7 @@ public class OrderDetailController : Controller
     {
         if (id == null) return NotFound();
 
-        var orderDetail = _cache.GetOrderDetails().FirstOrDefault(od => od.OrderDetailId == id);
+        var orderDetail = GetOrderDetails().FirstOrDefault(od => od.OrderDetailId == id);
         if (orderDetail == null) return NotFound();
         ViewData["FurnitureId"] =
             new SelectList(_context.Furnitures, "FurnitureId", "FurnitureName", orderDetail.FurnitureId);
@@ -86,7 +86,7 @@ public class OrderDetailController : Controller
             {
                 _context.Update(orderDetail);
                 await _context.SaveChangesAsync();
-                _cache.SetOrderDetails();
+                SetOrderDetails();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -107,7 +107,7 @@ public class OrderDetailController : Controller
     {
         if (id == null) return NotFound();
 
-        var orderDetail = _cache.GetOrderDetails()
+        var orderDetail = GetOrderDetails()
             .FirstOrDefault(od => od.OrderDetailId == id);
         if (orderDetail == null) return NotFound();
 
@@ -123,12 +123,27 @@ public class OrderDetailController : Controller
         if (orderDetail != null) _context.OrderDetails.Remove(orderDetail);
 
         await _context.SaveChangesAsync();
-        _cache.SetOrderDetails();
+        SetOrderDetails();
         return RedirectToAction(nameof(Index));
     }
 
     private bool OrderDetailExists(int id)
     {
-        return _cache.GetOrderDetails().Any(e => e.OrderDetailId == id);
+        return GetOrderDetails().Any(e => e.OrderDetailId == id);
+    }
+    
+    public IEnumerable<OrderDetail> GetOrderDetails()
+    {
+        _cache.TryGetValue("OrderDetails", out IEnumerable<OrderDetail>? orders);
+
+        return orders ?? SetOrderDetails();
+    }
+
+    public IEnumerable<OrderDetail> SetOrderDetails()
+    {
+        var orders = _context.OrderDetails.Include(od => od.Furniture).Include(od => od.Order).ToList();
+        _cache.Set("OrderDetails", orders,
+            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
+        return orders;
     }
 }

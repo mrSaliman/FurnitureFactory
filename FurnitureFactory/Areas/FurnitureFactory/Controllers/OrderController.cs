@@ -1,12 +1,12 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
-using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -16,10 +16,10 @@ public class OrderController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly FurnitureFactoryCacheService _cache;
+    private readonly IMemoryCache _cache;
 
 
-    public OrderController(AcmeDataContext context, FurnitureFactoryCacheService cache)
+    public OrderController(AcmeDataContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;
@@ -28,7 +28,7 @@ public class OrderController : Controller
     public IActionResult Index(int page = 1)
     {
         var order = HttpContext.Session.Get<OrderViewModel>("Order") ?? new OrderViewModel();
-        var orders = _cache.GetOrders();
+        var orders = GetOrders();
         orders = Sort_Search(orders, order.OrderDate, order.SpecialDiscount, order.IsCompleted,
             order.ResponsibleEmployeeFirstName, order.CustomerCompanyName);
         // Разбиение на страницы
@@ -62,7 +62,7 @@ public class OrderController : Controller
     {
         if (id == null) return NotFound();
 
-        var order = _cache.GetOrders()
+        var order = GetOrders()
             .FirstOrDefault(m => m.OrderId == id);
         if (order == null) return NotFound();
 
@@ -86,7 +86,7 @@ public class OrderController : Controller
         {
             _context.Add(order);
             await _context.SaveChangesAsync();
-            _cache.SetOrders();
+            SetOrders();
             return RedirectToAction(nameof(Index));
         }
 
@@ -100,7 +100,7 @@ public class OrderController : Controller
     {
         if (id == null) return NotFound();
 
-        var order = _cache.GetOrders().FirstOrDefault(o => o.OrderId == id);
+        var order = GetOrders().FirstOrDefault(o => o.OrderId == id);
         if (order == null) return NotFound();
         ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CompanyName", order.CustomerId);
         ViewData["ResponsibleEmployeeId"] =
@@ -122,7 +122,7 @@ public class OrderController : Controller
             {
                 _context.Update(order);
                 await _context.SaveChangesAsync();
-                _cache.SetOrders();
+                SetOrders();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -143,7 +143,7 @@ public class OrderController : Controller
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
-        var order = _cache.GetOrders().FirstOrDefault(m => m.OrderId == id);
+        var order = GetOrders().FirstOrDefault(m => m.OrderId == id);
         return order == null ? NotFound() : View(order);
     }
 
@@ -152,17 +152,17 @@ public class OrderController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var order = _cache.GetOrders().FirstOrDefault(o => o.OrderId == id);
+        var order = GetOrders().FirstOrDefault(o => o.OrderId == id);
         if (order != null) _context.Orders.Remove(order);
 
         await _context.SaveChangesAsync();
-        _cache.SetOrders();
+        SetOrders();
         return RedirectToAction(nameof(Index));
     }
 
     private bool OrderExists(int id)
     {
-        return _cache.GetOrders().Any(e => e.OrderId == id);
+        return GetOrders().Any(e => e.OrderId == id);
     }
 
     private static IEnumerable<Order> Sort_Search(IEnumerable<Order> orders, DateTime? orderDate, decimal specialDiscount,
@@ -174,5 +174,21 @@ public class OrderController : Controller
                                    && c.IsCompleted == isCompleted
                                    && c.Customer.CompanyName.Contains(customerCompanyName ?? ""));
         return orders;
+    }
+    
+    public IEnumerable<Order> GetOrders()
+    {
+        _cache.TryGetValue("Orders", out IEnumerable<Order>? orders);
+
+        return orders ?? SetOrders();
+    }
+
+    public IEnumerable<Order> SetOrders()
+    {
+        var orders = _context.Orders.Include(o => o.ResponsibleEmployee).Include(o => o.Customer);
+        var result = orders.ToList();
+        _cache.Set("Orders", result,
+            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
+        return result;
     }
 }

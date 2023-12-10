@@ -1,9 +1,9 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
-using FurnitureFactory.Areas.FurnitureFactory.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -12,9 +12,9 @@ namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 public class EmployeeController : Controller
 {
     private readonly AcmeDataContext _context;
-    private readonly FurnitureFactoryCacheService _cache;
+    private readonly IMemoryCache _cache;
 
-    public EmployeeController(AcmeDataContext context, FurnitureFactoryCacheService cache)
+    public EmployeeController(AcmeDataContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;
@@ -22,14 +22,14 @@ public class EmployeeController : Controller
 
     public IActionResult Index()
     {
-        return View(_cache.GetEmployees());
+        return View(GetEmployees());
     }
 
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
 
-        var employee = _cache.GetEmployees()
+        var employee = GetEmployees()
             .FirstOrDefault(m => m.EmployeeId == id);
         if (employee == null) return NotFound();
 
@@ -51,7 +51,7 @@ public class EmployeeController : Controller
         
         _context.Add(employee);
         await _context.SaveChangesAsync();
-        _cache.SetEmployees();
+        SetEmployees();
         return RedirectToAction(nameof(Index));
     }
 
@@ -59,7 +59,7 @@ public class EmployeeController : Controller
     {
         if (id == null) return NotFound();
 
-        var employee = _cache.GetEmployees().FirstOrDefault(e => e.EmployeeId == id);
+        var employee = GetEmployees().FirstOrDefault(e => e.EmployeeId == id);
         if (employee == null) return NotFound();
         return View(employee);
     }
@@ -77,7 +77,7 @@ public class EmployeeController : Controller
         {
             _context.Update(employee);
             await _context.SaveChangesAsync();
-            _cache.SetEmployees();
+            SetEmployees();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -91,7 +91,7 @@ public class EmployeeController : Controller
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
-        var employee = _cache.GetEmployees().FirstOrDefault(m => m.EmployeeId == id);
+        var employee = GetEmployees().FirstOrDefault(m => m.EmployeeId == id);
         return employee == null ? NotFound() : View(employee);
     }
 
@@ -100,16 +100,32 @@ public class EmployeeController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var employee = _cache.GetEmployees().FirstOrDefault(e => e.EmployeeId == id);
+        var employee = GetEmployees().FirstOrDefault(e => e.EmployeeId == id);
         if (employee != null) _context.Employees.Remove(employee);
 
         await _context.SaveChangesAsync();
-        _cache.SetEmployees();
+        SetEmployees();
         return RedirectToAction(nameof(Index));
     }
 
     private bool EmployeeExists(int id)
     {
-        return _cache.GetEmployees().Any(e => e.EmployeeId == id);
+        return GetEmployees().Any(e => e.EmployeeId == id);
+    }
+    
+    public IEnumerable<Employee> GetEmployees()
+    {
+        _cache.TryGetValue("Employees", out IEnumerable<Employee>? employees);
+
+        return employees ?? SetEmployees();
+    }
+
+    public IEnumerable<Employee> SetEmployees()
+    {
+        var employees = _context.Employees
+            .ToList();
+        _cache.Set("Employees", employees,
+            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
+        return employees;
     }
 }

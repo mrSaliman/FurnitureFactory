@@ -1,6 +1,5 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Middleware;
-using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,8 +24,6 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 builder.Services.AddRazorPages();
-
-builder.Services.AddTransient<FurnitureFactoryCacheService>();
 
 var app = builder.Build();
 

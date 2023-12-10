@@ -28,6 +28,7 @@
     <ItemGroup>
         <Folder Include="Areas\FurnitureFactory\Data\"/>
         <Folder Include="Areas\FurnitureFactory\Models\"/>
+        <Folder Include="Areas\FurnitureFactory\Services\" />
         <Folder Include="Areas\FurnitureFactory\Views\"/>
     </ItemGroup>
 
