@@ -60,13 +60,15 @@ public class PageLinkTagHelper : TagHelper
         var link = new TagBuilder("a");
         if (pageNumber == PageModel.PageNumber)
         {
-            item.AddCssClass("active");
+            item.AddCssClass("page-item active");
         }
         else
         {
+            item.AddCssClass("page-item");
             PageUrlValues["page"] = pageNumber;
             link.Attributes["href"] = urlHelper.Action(PageAction, PageUrlValues);
         }
+        link.AddCssClass("page-link");
 
         link.InnerHtml.Append(pageNumber.ToString());
         item.InnerHtml.AppendHtml(link);

@@ -4,20 +4,32 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Furniture</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form action="@Url.Action("Index", "Furniture")" method="post">
-    FurnitureName: @Html.TextBox("FurnitureName", Model.FurnitureName, new { style = "width: 100px;" })
-    Description: @Html.TextBox("Description", Model.Description, new { style = "width: 100px;" })
-    MaterialType: @Html.TextBox("MaterialType", Model.MaterialType, new { style = "width: 100px;" })
-    Price: @Html.TextBox("Price", Model.Price, new { style = "width: 100px;" })
-    QuantityOnHand: @Html.TextBox("QuantityOnHand", Model.QuantityOnHand, new { type = "number", style = "width: 100px;" })
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+    Filter
+</button>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filter</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="@Url.Action("Index", "Furniture")" method="post">
+            FurnitureName: @Html.TextBox("FurnitureName", Model.FurnitureName, new { style = "width: 100px;" })<br>
+            Description: @Html.TextBox("Description", Model.Description, new { style = "width: 100px;" })<br>
+            MaterialType: @Html.TextBox("MaterialType", Model.MaterialType, new { style = "width: 100px;" })<br>
+            Price: @Html.TextBox("Price", Model.Price, new { style = "width: 100px;" })<br>
+            QuantityOnHand: @Html.TextBox("QuantityOnHand", Model.QuantityOnHand, new { type = "number", style = "width: 100px;" })<br>
+        
+            <input class="btn btn-primary" type="submit" value="Find"/>
+        </form>
+    </div>
+</div>
 
-    <input type="submit" value="Найти"/>
-</form>
 <table class="table">
     <thead>
     <tr>

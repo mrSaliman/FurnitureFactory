@@ -4,20 +4,32 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Orders</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form action="@Url.Action("Index", "Order")" method="post">
-    OrderDate: <input asp-for="@Model.OrderDate" name="OrderDate" type="date" style="width: 100px;"></input>
-    SpecialDiscount: <input asp-for="@Model.SpecialDiscount" name="SpecialDiscount" step="any" style="width: 100px;"></input>
-    IsCompleted:<input asp-for="@Model.IsCompleted" name="IsCompleted" type="checkbox"></input>
-    CustomerCompanyName: @Html.TextBox("CustomerCompanyName", Model.CustomerCompanyName, new { style = "width: 100px;" })
-    ResponsibleEmployeeFirstName: @Html.TextBox("ResponsibleEmployeeFirstName", Model.ResponsibleEmployeeFirstName, new { style = "width: 100px;" })
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+    Filter
+</button>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filter</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="@Url.Action("Index", "Order")" method="post">
+            OrderDate: <input asp-for="@Model.OrderDate" name="OrderDate" type="date" style="width: 100px;"/><br>
+            SpecialDiscount: <input asp-for="@Model.SpecialDiscount" name="SpecialDiscount" step="any" style="width: 100px;"/><br>
+            IsCompleted:<input asp-for="@Model.IsCompleted" name="IsCompleted" type="checkbox"/><br>
+            CustomerCompanyName: @Html.TextBox("CustomerCompanyName", Model.CustomerCompanyName, new { style = "width: 100px;" })<br>
+            ResponsibleEmployeeFirstName: @Html.TextBox("ResponsibleEmployeeFirstName", Model.ResponsibleEmployeeFirstName, new { style = "width: 100px;" })<br>
+        
+            <input class="btn btn-primary" type="submit" value="Find"/>
+        </form>
+    </div>
+</div>
 
-    <input type="submit" value="Найти"/>
-</form>
 <table class="table">
     <thead>
     <tr>

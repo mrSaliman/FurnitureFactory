@@ -4,21 +4,31 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<h1>Customers</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form action="@Url.Action("Index", "Customer")" method="post">
-    CompanyName: @Html.TextBox("CompanyName", Model.CompanyName, new { style = "width: 100px;" })
-    RepresentativeLastName: @Html.TextBox("RepresentativeLastName", Model.RepresentativeLastName, new { style = "width: 100px;" })
-    RepresentativeFirstName: @Html.TextBox("RepresentativeFirstName", Model.RepresentativeFirstName, new { style = "width: 100px;" })
-    RepresentativeMiddleName: @Html.TextBox("RepresentativeMiddleName", Model.RepresentativeMiddleName, new { style = "width: 100px;" })
-    PhoneNumber: @Html.TextBox("PhoneNumber", Model.PhoneNumber, new { style = "width: 100px;" })
-    Address: @Html.TextBox("Address", Model.Address, new { style = "width: 100px;" })
-
-    <input type="submit" value="Найти"/>
-</form>
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+    Filter
+</button>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filter</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="@Url.Action("Index", "Customer")" method="post">
+            CompanyName: @Html.TextBox("CompanyName", Model.CompanyName, new { style = "width: 100px;" })<br>
+            RepresentativeLastName: @Html.TextBox("RepresentativeLastName", Model.RepresentativeLastName, new { style = "width: 100px;" })<br>
+            RepresentativeFirstName: @Html.TextBox("RepresentativeFirstName", Model.RepresentativeFirstName, new { style = "width: 100px;" })<br>
+            RepresentativeMiddleName: @Html.TextBox("RepresentativeMiddleName", Model.RepresentativeMiddleName, new { style = "width: 100px;" })<br>
+            PhoneNumber: @Html.TextBox("PhoneNumber", Model.PhoneNumber, new { style = "width: 100px;" })<br>
+            Address: @Html.TextBox("Address", Model.Address, new { style = "width: 100px;" })<br>
+            <input class="btn btn-primary" type="submit" value="Find"/>
+        </form>
+    </div>
+</div>
 <table class="table">
     <thead>
     <tr>
