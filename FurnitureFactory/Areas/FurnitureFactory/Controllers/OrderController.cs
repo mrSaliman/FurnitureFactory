@@ -11,7 +11,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
 [Area("FurnitureFactory")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,User,SuperUser")]
 public class OrderController : Controller
 {
     private const int PageSize = 8;
@@ -25,6 +25,7 @@ public class OrderController : Controller
         _cache = cache;
     }
 
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(int page = 1)
     {
         var order = HttpContext.Session.Get<OrderViewModel>("Order") ?? new OrderViewModel();
@@ -51,6 +52,7 @@ public class OrderController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(OrderViewModel order)
     {
         HttpContext.Session.Set("Order", order);
@@ -58,6 +60,7 @@ public class OrderController : Controller
         return RedirectToAction("Index");
     }
 
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
@@ -69,6 +72,7 @@ public class OrderController : Controller
         return View(order);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Create()
     {
         ViewData["CustomerId"] = new SelectList(_context.Customers, "CustomerId", "CompanyName");
@@ -78,6 +82,7 @@ public class OrderController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Create(
         [Bind("OrderId,OrderDate,CustomerId,SpecialDiscount,IsCompleted,ResponsibleEmployeeId")]
         Order order)
@@ -96,6 +101,7 @@ public class OrderController : Controller
         return View(order);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -110,6 +116,7 @@ public class OrderController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Edit(int id,
         [Bind("OrderId,OrderDate,CustomerId,SpecialDiscount,IsCompleted,ResponsibleEmployeeId")]
         Order order)
@@ -140,6 +147,7 @@ public class OrderController : Controller
         return View(order);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -150,6 +158,7 @@ public class OrderController : Controller
     [HttpPost]
     [ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var order = GetOrders().FirstOrDefault(o => o.OrderId == id);
@@ -170,9 +179,9 @@ public class OrderController : Controller
     {
         orders = orders.Where(c => (c.OrderDate.Date == orderDate || orderDate == new DateTime() || orderDate == null)
                                    && (c.SpecialDiscount == specialDiscount || specialDiscount == 0)
-                                   && c.ResponsibleEmployee.FirstName.Contains(responsibleEmployeeFirstName ?? "")
+                                   && c.ResponsibleEmployee.FirstName.Contains(responsibleEmployeeFirstName ?? "", StringComparison.OrdinalIgnoreCase)
                                    && c.IsCompleted == isCompleted
-                                   && c.Customer.CompanyName.Contains(customerCompanyName ?? ""));
+                                   && c.Customer.CompanyName.Contains(customerCompanyName ?? "", StringComparison.OrdinalIgnoreCase));
         return orders;
     }
     

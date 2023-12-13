@@ -10,7 +10,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
 [Area("FurnitureFactory")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,User,SuperUser")]
 public class FurnitureController : Controller
 {
     private const int PageSize = 8;
@@ -23,6 +23,7 @@ public class FurnitureController : Controller
         _cache = cache;
     }
 
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(int page = 1)
     {
         var furniture = HttpContext.Session.Get<FurnitureViewModel>("Furniture") ?? new FurnitureViewModel();
@@ -48,6 +49,7 @@ public class FurnitureController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(FurnitureViewModel furniture)
     {
         HttpContext.Session.Set("Furniture", furniture);
@@ -55,7 +57,7 @@ public class FurnitureController : Controller
         return RedirectToAction("Index");
     }
 
-
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
@@ -67,6 +69,7 @@ public class FurnitureController : Controller
         return View(furniture);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Create()
     {
         return View();
@@ -74,6 +77,7 @@ public class FurnitureController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Create(
         [Bind("FurnitureId,FurnitureName,Description,MaterialType,Price,QuantityOnHand")]
         Furniture furniture)
@@ -86,6 +90,7 @@ public class FurnitureController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -96,6 +101,7 @@ public class FurnitureController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Edit(int id,
         [Bind("FurnitureId,FurnitureName,Description,MaterialType,Price,QuantityOnHand")]
         Furniture furniture)
@@ -117,6 +123,7 @@ public class FurnitureController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -127,6 +134,7 @@ public class FurnitureController : Controller
     [HttpPost]
     [ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var furniture = GetFurnitures().FirstOrDefault(f => f.FurnitureId == id);
@@ -147,9 +155,9 @@ public class FurnitureController : Controller
         string materialType, decimal price, int quantityOnHand)
     {
         furnitures = furnitures
-            .Where(c => c.FurnitureName.Contains(furnitureName ?? "")
-                        && c.Description.Contains(description ?? "")
-                        && c.MaterialType.Contains(materialType ?? "")
+            .Where(c => c.FurnitureName.Contains(furnitureName ?? "", StringComparison.OrdinalIgnoreCase)
+                        && c.Description.Contains(description ?? "", StringComparison.OrdinalIgnoreCase)
+                        && c.MaterialType.Contains(materialType ?? "", StringComparison.OrdinalIgnoreCase)
                         && (c.Price == price || price == 0)
                         && (c.QuantityOnHand == quantityOnHand || quantityOnHand == 0));
         return furnitures;

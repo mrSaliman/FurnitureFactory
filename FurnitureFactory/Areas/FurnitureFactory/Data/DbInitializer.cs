@@ -10,20 +10,48 @@ public static class DbInitializer
 
         if (db.OrderDetails.Any()) return; // База данных инициализирована
 
-        const int customersNumber = 35;
-        const int employeesNumber = 35;
-        const int furnituresNumber = 35;
-        const int ordersNumber = 300;
-        const int orderDetailsNumber = 300;
+        const int customersNumber = 100;
+        const int employeesNumber = 100;
+        const int furnituresNumber = 100;
+        const int ordersNumber = 10000;
+        const int orderDetailsNumber = 10000;
 
         Random randObj = new(1);
 
-        string[] personFirstVoc = { "Дмитрий", "Евгений", "Даниил", "Денис", "Василий" };
-        string[] personLastVoc = { "Валуев", "Иванов", "Бондарев", "Демиденко", "Ермолин" };
-        string[] personMiddleVoc = { "Осипович", "Александрович", "Дмитриевич", "Абхазьевич", "Сергеевич" };
-        string[] materialVoc = { "Сталь", "Платина", "Алюминий", "ПЭТ", "Чугун", "Алюминий", "Сталь" };
-        string[] positionVoc = { "Администратор", "Механик", "Супервайзер", "Продавец", "Уборщик" };
-        string[] educationVoc = { "Среднее", "Высшее", "Нет" };
+        string[] personFirstVoc =
+        {
+            "Dmitry", "Eugene", "Daniel", "Denis", "Vasily", "Olga", "Natalia", "Ivan", "Svetlana", "Pavel", "Anna",
+            "Sergey", "Maria", "Andrey", "Yulia", "Alexey", "Ekaterina", "Mikhail", "Yana"
+        };
+        string[] personLastVoc =
+        {
+            "Valuev", "Ivanov", "Bondarev", "Demidenko", "Ermolin", "Kuznetsov", "Popov", "Sokolov", "Mironov",
+            "Lebedev", "Novikov", "Petrov", "Volkov", "Solovyov", "Morozov", "Fedorov", "Sergeev", "Kozlov", "Egorov"
+        };
+        string[] personMiddleVoc =
+        {
+            "Osipovich", "Alexandrovich", "Dmitrievich", "Abkhazievich", "Sergeevich", "Vladimirovich", "Nikolaevich",
+            "Igorevich", "Petrovich", "Olegovich", "Anatolyevich", "Yuryevich", "Vitalievich", "Yaroslavovich",
+            "Valentinovich", "Borisovich", "Ivanovich", "Dmitrievich", "Vladovich"
+        };
+        string[] materialVoc =
+        {
+            "Steel", "Platinum", "Aluminum", "PET", "Cast Iron", "Aluminum", "Steel", "Copper", "Bronze", "Titanium",
+            "Wood", "Glass", "Concrete", "Silver", "Gold", "Brass", "Ceramic", "Rubber", "Plastic"
+        };
+        string[] positionVoc =
+        {
+            "Administrator", "Mechanic", "Supervisor", "Salesperson", "Janitor", "Engineer", "Manager", "Developer",
+            "Analyst", "Designer", "Technician", "Consultant", "Specialist", "Coordinator", "Inspector", "Assistant",
+            "Operator", "Driver", "Cashier", "Waiter"
+        };
+        string[] educationVoc =
+        {
+            "Secondary", "Higher", "None", "Technical", "Bachelor's", "Master's", "Ph.D.", "Vocational", "Diploma",
+            "Certificate", "Associate", "Graduate", "Postgraduate", "Professional", "Specialized", "Doctorate",
+            "Undergraduate", "Advanced", "Self-Taught", "Apprenticeship"
+        };
+
 
         for (var i = 1; i <= customersNumber; i++)
         {

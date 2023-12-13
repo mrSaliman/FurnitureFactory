@@ -1,5 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
+using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,9 +11,10 @@ using Microsoft.Extensions.Caching.Memory;
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
 [Area("FurnitureFactory")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,User,SuperUser")]
 public class OrderDetailController : Controller
 {
+    private const int PageSize = 8;
     private readonly AcmeDataContext _context;
     private readonly IMemoryCache _cache;
 
@@ -21,11 +24,50 @@ public class OrderDetailController : Controller
         _cache = cache;
     }
 
-    public IActionResult Index()
+    [Authorize(Roles = "Admin,User,SuperUser")]
+    public IActionResult Index(int page = 1)
     {
-        return View(GetOrderDetails());
+        var orderDetail = HttpContext.Session.Get<OrderDetailViewModel>("OrderDetail") ?? new OrderDetailViewModel();
+        var orderDetails = GetOrderDetails();
+        orderDetails = Sort_Search(orderDetails, orderDetail.OrderDate, orderDetail.FurnitureName, orderDetail.Quantity);
+        // Разбиение на страницы
+        var ordersPage = orderDetails.ToList();
+        var count = ordersPage.Count;
+        orderDetails = ordersPage.Skip((page - 1) * PageSize).Take(PageSize);
+
+
+        var orderDetailViewModel = new OrderDetailViewModel
+        {
+            OrderDetails = orderDetails,
+            PageViewModel = new PageViewModel(count, page, PageSize),
+            OrderDate = orderDetail.OrderDate,
+            FurnitureName = orderDetail.FurnitureName,
+            Quantity = orderDetail.Quantity
+        };
+        return View(orderDetailViewModel);
     }
 
+    private static IEnumerable<OrderDetail> Sort_Search(IEnumerable<OrderDetail> orderDetails,
+        DateTime? orderDate, string furnitureName, int quantity)
+    {
+        orderDetails = orderDetails.Where(od =>
+            (od.Order.OrderDate.Date == orderDate || orderDate == new DateTime() || orderDate == null)
+            && od.Furniture.FurnitureName.Contains(furnitureName ?? "", StringComparison.OrdinalIgnoreCase)
+            && (od.Quantity == quantity || quantity == 0));
+
+        return orderDetails;
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin,User,SuperUser")]
+    public IActionResult Index(OrderDetailViewModel orderDetail)
+    {
+        HttpContext.Session.Set("OrderDetail", orderDetail);
+
+        return RedirectToAction("Index");
+    }
+    
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
@@ -34,6 +76,7 @@ public class OrderDetailController : Controller
         return orderDetail == null ? NotFound() : View(orderDetail);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Create()
     {
         ViewData["FurnitureId"] = new SelectList(_context.Furnitures, "FurnitureId", "FurnitureName");
@@ -43,6 +86,7 @@ public class OrderDetailController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Create(
         [Bind("OrderDetailId,OrderId,FurnitureId,Quantity")]
         OrderDetail orderDetail)
@@ -61,6 +105,7 @@ public class OrderDetailController : Controller
         return View(orderDetail);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public ActionResult Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -75,6 +120,7 @@ public class OrderDetailController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Edit(int id,
         [Bind("OrderDetailId,OrderId,FurnitureId,Quantity")] OrderDetail orderDetail)
     {
@@ -103,6 +149,7 @@ public class OrderDetailController : Controller
         return View(orderDetail);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -117,6 +164,7 @@ public class OrderDetailController : Controller
     [HttpPost]
     [ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var orderDetail = await _context.OrderDetails.FindAsync(id);

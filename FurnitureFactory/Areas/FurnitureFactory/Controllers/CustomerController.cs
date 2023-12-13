@@ -10,20 +10,20 @@ using Microsoft.Extensions.Caching.Memory;
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
 [Area("FurnitureFactory")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,User,SuperUser")]
 public class CustomerController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
     private readonly IMemoryCache _cache;
-
-
+    
     public CustomerController(AcmeDataContext context, IMemoryCache cache)
     {
         _context = context;
         _cache = cache;
     }
 
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(int page = 1)
     {
         var customer = HttpContext.Session.Get<CustomerViewModel>("Customer") ?? new CustomerViewModel();
@@ -52,14 +52,15 @@ public class CustomerController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Index(CustomerViewModel customer)
     {
         HttpContext.Session.Set("Customer", customer);
 
         return RedirectToAction("Index");
     }
-
-
+    
+    [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
         if (id == null) return NotFound();
@@ -70,6 +71,7 @@ public class CustomerController : Controller
         return View(customer);
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Create()
     {
         return View();
@@ -77,6 +79,7 @@ public class CustomerController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Create(
         [Bind(
             "CustomerId,CompanyName,RepresentativeLastName,RepresentativeFirstName,RepresentativeMiddleName,PhoneNumber,Address")]
@@ -90,6 +93,7 @@ public class CustomerController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -101,6 +105,7 @@ public class CustomerController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Edit(int id,
         [Bind(
             "CustomerId,CompanyName,RepresentativeLastName,RepresentativeFirstName,RepresentativeMiddleName,PhoneNumber,Address")]
@@ -124,6 +129,7 @@ public class CustomerController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = "Admin,SuperUser")]
     public IActionResult Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -134,6 +140,7 @@ public class CustomerController : Controller
     [HttpPost]
     [ActionName("Delete")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var customer = GetCustomers().FirstOrDefault(c => c.CustomerId == id);
@@ -153,12 +160,12 @@ public class CustomerController : Controller
         string representativeLastName, string representativeFirstName,
         string representativeMiddleName, string phoneNumber, string address)
     {
-        customers = customers.Where(c => c.CompanyName.Contains(companyName ?? "")
-                                         && c.RepresentativeLastName.Contains(representativeLastName ?? "")
-                                         && c.RepresentativeFirstName.Contains(representativeFirstName ?? "")
-                                         && c.RepresentativeMiddleName.Contains(representativeMiddleName ?? "")
-                                         && c.PhoneNumber.Contains(phoneNumber ?? "")
-                                         && c.Address.Contains(address ?? ""));
+        customers = customers.Where(c => c.CompanyName.Contains(companyName ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeLastName.Contains(representativeLastName ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeFirstName.Contains(representativeFirstName ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeMiddleName.Contains(representativeMiddleName ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.PhoneNumber.Contains(phoneNumber ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.Address.Contains(address ?? "", StringComparison.OrdinalIgnoreCase));
         return customers;
     }
     

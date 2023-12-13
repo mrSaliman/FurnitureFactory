@@ -1,4 +1,4 @@
-@model IEnumerable<FurnitureFactory.Areas.FurnitureFactory.Models.Employee>
+@model FurnitureFactory.Areas.FurnitureFactory.ViewModels.EmployeeViewModel
 
 @{
     ViewData["Title"] = "Index";
@@ -9,6 +9,25 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
+<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample" aria-controls="offcanvasExample">
+    Filter
+</button>
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel">Filter</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <form action="@Url.Action("Index", "Employee")" method="post">
+            LastName: @Html.TextBox("LastName", Model.LastName, new { style = "width: 100px;" })<br>
+            FirstName: @Html.TextBox("FirstName", Model.FirstName, new { style = "width: 100px;" })<br>
+            MiddleName: @Html.TextBox("MiddleName", Model.MiddleName, new { style = "width: 100px;" })<br>
+            Position: @Html.TextBox("Position", Model.Position, new { style = "width: 100px;" })<br>
+            Education: @Html.TextBox("Education", Model.Education, new { style = "width: 100px;" })<br>
+            <input class="btn btn-primary" type="submit" value="Find"/>
+        </form>
+    </div>
+</div>
 <table class="table">
     <thead>
     <tr>
@@ -31,7 +50,7 @@
     </tr>
     </thead>
     <tbody>
-    @foreach (var item in Model)
+    @foreach (var item in Model.Employees)
     {
         <tr>
             <td>
@@ -58,3 +77,4 @@
     }
     </tbody>
 </table>
+<page-link page-model="@Model.PageViewModel" page-action="Index"></page-link>
