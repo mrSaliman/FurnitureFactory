@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ public class CustomerController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly CustomerCache _cache;
     
-    public CustomerController(AcmeDataContext context, IMemoryCache cache)
+    public CustomerController(AcmeDataContext context, CustomerCache cache)
     {
         _context = context;
         _cache = cache;
@@ -118,7 +119,7 @@ public class CustomerController : Controller
         {
             _context.Update(customer);
             await _context.SaveChangesAsync();
-            SetCustomers();
+            _cache.Update();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -147,7 +148,7 @@ public class CustomerController : Controller
         if (customer != null) _context.Customers.Remove(customer);
 
         await _context.SaveChangesAsync();
-        SetCustomers();
+        _cache.Update();
         return RedirectToAction(nameof(Index));
     }
 
@@ -171,17 +172,11 @@ public class CustomerController : Controller
     
     public IEnumerable<Customer> GetCustomers()
     {
-        _cache.TryGetValue("Customers", out IEnumerable<Customer>? customers);
-
-        return customers ?? SetCustomers();
+        return _cache.Get();
     }
 
     public IEnumerable<Customer> SetCustomers()
     {
-        var customers = _context.Customers
-            .ToList();
-        _cache.Set("Customers", customers,
-            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
-        return customers;
+        return _cache.Set();
     }
 }

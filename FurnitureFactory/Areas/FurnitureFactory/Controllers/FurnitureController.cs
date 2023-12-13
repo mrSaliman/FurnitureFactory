@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ public class FurnitureController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly FurnitureCache _cache;
 
-    public FurnitureController(AcmeDataContext context, IMemoryCache cache)
+    public FurnitureController(AcmeDataContext context, FurnitureCache cache)
     {
         _context = context;
         _cache = cache;
@@ -112,7 +113,7 @@ public class FurnitureController : Controller
         {
             _context.Update(furniture);
             await _context.SaveChangesAsync();
-            SetFurnitures();
+            _cache.Update();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -141,7 +142,7 @@ public class FurnitureController : Controller
         if (furniture != null) _context.Furnitures.Remove(furniture);
 
         await _context.SaveChangesAsync();
-        SetFurnitures();
+        _cache.Update();
         return RedirectToAction(nameof(Index));
     }
 
@@ -165,17 +166,11 @@ public class FurnitureController : Controller
     
     public IEnumerable<Furniture> GetFurnitures()
     {
-        _cache.TryGetValue("Furnitures", out IEnumerable<Furniture>? furnitures);
-
-        return furnitures ?? SetFurnitures();
+        return _cache.Get();
     }
 
     public IEnumerable<Furniture> SetFurnitures()
     {
-        var furnitures = _context.Furnitures
-            .ToList();
-        _cache.Set("Furnitures", furnitures,
-            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
-        return furnitures;
+        return _cache.Set();
     }
 }

@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ public class EmployeeController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly EmployeeCache _cache;
 
-    public EmployeeController(AcmeDataContext context, IMemoryCache cache)
+    public EmployeeController(AcmeDataContext context, EmployeeCache cache)
     {
         _context = context;
         _cache = cache;
@@ -116,7 +117,7 @@ public class EmployeeController : Controller
         {
             _context.Update(employee);
             await _context.SaveChangesAsync();
-            SetEmployees();
+            _cache.Update();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -145,7 +146,7 @@ public class EmployeeController : Controller
         if (employee != null) _context.Employees.Remove(employee);
 
         await _context.SaveChangesAsync();
-        SetEmployees();
+        _cache.Update();
         return RedirectToAction(nameof(Index));
     }
 
@@ -167,17 +168,11 @@ public class EmployeeController : Controller
     
     public IEnumerable<Employee> GetEmployees()
     {
-        _cache.TryGetValue("Employees", out IEnumerable<Employee>? employees);
-
-        return employees ?? SetEmployees();
+        return _cache.Get();
     }
 
     public IEnumerable<Employee> SetEmployees()
     {
-        var employees = _context.Employees
-            .ToList();
-        _cache.Set("Employees", employees,
-            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
-        return employees;
+        return _cache.Set();
     }
 }

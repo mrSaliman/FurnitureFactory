@@ -1,33 +1,40 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Middleware;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+var services = builder.Services;
+
+services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+services.AddDatabaseDeveloperPageExceptionFilter();
 
 var connection = builder.Configuration.GetConnectionString("SqlServerConnection")!;
-builder.Services.AddDbContext<AcmeDataContext>(options => options.UseSqlServer(connection));
+services.AddDbContext<AcmeDataContext>(options => options.UseSqlServer(connection));
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+services.AddDatabaseDeveloperPageExceptionFilter();
+services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultUI()
     .AddDefaultTokenProviders();
 
-builder.Services.AddControllersWithViews();
-builder.Services.AddSession();
-builder.Services.AddRazorPages();
+services.AddControllersWithViews();
+services.AddSession();
+services.AddRazorPages();
+
+services.AddTransient<OrderDetailCache>();
+services.AddTransient<FurnitureCache>();
+services.AddTransient<OrderCache>();
+services.AddTransient<EmployeeCache>();
+services.AddTransient<CustomerCache>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -35,7 +42,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -70,10 +76,8 @@ using (var scope = app.Services.CreateScope())
     var roles = new[] { "Admin", "User", "SuperUser" };
 
     foreach (var role in roles)
-    {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
-    }
 }
 
 using (var scope = app.Services.CreateScope())

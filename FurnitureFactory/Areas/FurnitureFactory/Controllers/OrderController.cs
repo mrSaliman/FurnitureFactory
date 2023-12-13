@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,9 @@ public class OrderController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly OrderCache _cache;
 
-
-    public OrderController(AcmeDataContext context, IMemoryCache cache)
+    public OrderController(AcmeDataContext context, OrderCache cache)
     {
         _context = context;
         _cache = cache;
@@ -129,7 +129,7 @@ public class OrderController : Controller
             {
                 _context.Update(order);
                 await _context.SaveChangesAsync();
-                SetOrders();
+                _cache.Update();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -165,7 +165,7 @@ public class OrderController : Controller
         if (order != null) _context.Orders.Remove(order);
 
         await _context.SaveChangesAsync();
-        SetOrders();
+        _cache.Update();
         return RedirectToAction(nameof(Index));
     }
 
@@ -174,30 +174,27 @@ public class OrderController : Controller
         return GetOrders().Any(e => e.OrderId == id);
     }
 
-    private static IEnumerable<Order> Sort_Search(IEnumerable<Order> orders, DateTime? orderDate, decimal specialDiscount,
+    private static IEnumerable<Order> Sort_Search(IEnumerable<Order> orders, DateTime? orderDate,
+        decimal specialDiscount,
         bool isCompleted, string responsibleEmployeeFirstName, string customerCompanyName)
     {
         orders = orders.Where(c => (c.OrderDate.Date == orderDate || orderDate == new DateTime() || orderDate == null)
                                    && (c.SpecialDiscount == specialDiscount || specialDiscount == 0)
-                                   && c.ResponsibleEmployee.FirstName.Contains(responsibleEmployeeFirstName ?? "", StringComparison.OrdinalIgnoreCase)
+                                   && c.ResponsibleEmployee.FirstName.Contains(responsibleEmployeeFirstName ?? "",
+                                       StringComparison.OrdinalIgnoreCase)
                                    && c.IsCompleted == isCompleted
-                                   && c.Customer.CompanyName.Contains(customerCompanyName ?? "", StringComparison.OrdinalIgnoreCase));
+                                   && c.Customer.CompanyName.Contains(customerCompanyName ?? "",
+                                       StringComparison.OrdinalIgnoreCase));
         return orders;
     }
-    
+
     public IEnumerable<Order> GetOrders()
     {
-        _cache.TryGetValue("Orders", out IEnumerable<Order>? orders);
-
-        return orders ?? SetOrders();
+        return _cache.Get();
     }
 
     public IEnumerable<Order> SetOrders()
     {
-        var orders = _context.Orders.Include(o => o.ResponsibleEmployee).Include(o => o.Customer);
-        var result = orders.ToList();
-        _cache.Set("Orders", result,
-            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
-        return result;
+        return _cache.Set();
     }
 }

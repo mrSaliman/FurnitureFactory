@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
+using FurnitureFactory.Areas.FurnitureFactory.Services;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,9 @@ public class OrderDetailController : Controller
 {
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
-    private readonly IMemoryCache _cache;
+    private readonly OrderDetailCache _cache;
 
-    public OrderDetailController(AcmeDataContext context, IMemoryCache cache)
+    public OrderDetailController(AcmeDataContext context, OrderDetailCache cache)
     {
         _context = context;
         _cache = cache;
@@ -132,7 +133,7 @@ public class OrderDetailController : Controller
             {
                 _context.Update(orderDetail);
                 await _context.SaveChangesAsync();
-                SetOrderDetails();
+                _cache.Update();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -171,7 +172,7 @@ public class OrderDetailController : Controller
         if (orderDetail != null) _context.OrderDetails.Remove(orderDetail);
 
         await _context.SaveChangesAsync();
-        SetOrderDetails();
+        _cache.Update();
         return RedirectToAction(nameof(Index));
     }
 
@@ -182,16 +183,11 @@ public class OrderDetailController : Controller
     
     public IEnumerable<OrderDetail> GetOrderDetails()
     {
-        _cache.TryGetValue("OrderDetails", out IEnumerable<OrderDetail>? orders);
-
-        return orders ?? SetOrderDetails();
+        return _cache.Get();
     }
 
     public IEnumerable<OrderDetail> SetOrderDetails()
     {
-        var orders = _context.OrderDetails.Include(od => od.Furniture).Include(od => od.Order).ToList();
-        _cache.Set("OrderDetails", orders,
-            new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(100000)));
-        return orders;
+        return _cache.Set();
     }
 }
