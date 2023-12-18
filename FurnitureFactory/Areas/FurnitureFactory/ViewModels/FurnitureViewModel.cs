@@ -6,7 +6,7 @@ public class FurnitureViewModel
 {
     public IEnumerable<Furniture> Furnitures { get; set; }
     public PageViewModel PageViewModel { get; set; }
-
+    public SortViewModel? SortViewModel { get; set; }
     public string FurnitureName { get; set; }
 
     public string Description { get; set; }

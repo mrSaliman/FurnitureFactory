@@ -17,7 +17,6 @@ public class DbInitializerMiddleware
         DbInitializer.Initialize(dbContext);
         context.Session.SetString("starting", "Yes");
 
-        // Call the next delegate/middleware in the pipeline
         return _next.Invoke(context);
     }
 }

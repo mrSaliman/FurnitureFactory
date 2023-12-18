@@ -39,6 +39,12 @@ public class PageLinkTagHelper : TagHelper
         // создаем ссылку на предыдущую страницу, если она есть
         if (PageModel.HasPreviousPage)
         {
+            if (PageModel.PageNumber > 2)
+            {
+                var startItem = CreateTag(1, urlHelper);
+                tag.InnerHtml.AppendHtml(startItem);
+            }
+            
             var prevItem = CreateTag(PageModel.PageNumber - 1, urlHelper);
             tag.InnerHtml.AppendHtml(prevItem);
         }
@@ -49,6 +55,12 @@ public class PageLinkTagHelper : TagHelper
         {
             var nextItem = CreateTag(PageModel.PageNumber + 1, urlHelper);
             tag.InnerHtml.AppendHtml(nextItem);
+            
+            if (PageModel.TotalPages - PageModel.PageNumber > 1)
+            {
+                var finishItem = CreateTag(PageModel.TotalPages, urlHelper);
+                tag.InnerHtml.AppendHtml(finishItem);
+            }
         }
 
         output.Content.AppendHtml(tag);
@@ -68,6 +80,7 @@ public class PageLinkTagHelper : TagHelper
             PageUrlValues["page"] = pageNumber;
             link.Attributes["href"] = urlHelper.Action(PageAction, PageUrlValues);
         }
+
         link.AddCssClass("page-link");
 
         link.InnerHtml.Append(pageNumber.ToString());

@@ -2,11 +2,12 @@ using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
 using FurnitureFactory.Areas.FurnitureFactory.Services;
+using FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+using System.Linq.Dynamic.Core;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -17,7 +18,7 @@ public class CustomerController : Controller
     private const int PageSize = 8;
     private readonly AcmeDataContext _context;
     private readonly CustomerCache _cache;
-    
+
     public CustomerController(AcmeDataContext context, CustomerCache cache)
     {
         _context = context;
@@ -25,31 +26,28 @@ public class CustomerController : Controller
     }
 
     [Authorize(Roles = "Admin,User,SuperUser")]
-    public IActionResult Index(int page = 1)
+    public IActionResult Index(string sortField = "", int page = 1)
     {
         var customer = HttpContext.Session.Get<CustomerViewModel>("Customer") ?? new CustomerViewModel();
+        customer.SortViewModel ??= new SortViewModel("", true);
+        var sortOrder = customer.SortViewModel.GetOrientedSortOrder(sortField);
+        
         var customers = GetCustomers();
         customers = Sort_Search(customers, customer.CompanyName ?? "",
-            customer.RepresentativeLastName ?? "", customer.RepresentativeFirstName,
-            customer.RepresentativeMiddleName ?? "", customer.PhoneNumber ?? "", customer.Address ?? "");
+            customer.RepresentativeLastName ?? "", customer.RepresentativeFirstName ?? "",
+            customer.RepresentativeMiddleName ?? "", customer.PhoneNumber ?? "", customer.Address ?? "",
+            sortOrder);
+        
         // Разбиение на страницы
         var customersPage = customers.ToList();
         var count = customersPage.Count;
         customers = customersPage.Skip((page - 1) * PageSize).Take(PageSize);
 
-
-        var customerViewModel = new CustomerViewModel
-        {
-            Customers = customers,
-            PageViewModel = new PageViewModel(count, page, PageSize),
-            CompanyName = customer.CompanyName,
-            RepresentativeLastName = customer.RepresentativeLastName,
-            RepresentativeFirstName = customer.RepresentativeFirstName,
-            RepresentativeMiddleName = customer.RepresentativeMiddleName,
-            PhoneNumber = customer.PhoneNumber,
-            Address = customer.Address
-        };
-        return View(customerViewModel);
+        customer.PageViewModel = new PageViewModel(count, page, PageSize);
+        HttpContext.Session.Set("Customer", customer);
+        customer.Customers = customers;
+        
+        return View(customer);
     }
 
     [HttpPost]
@@ -60,7 +58,7 @@ public class CustomerController : Controller
 
         return RedirectToAction("Index");
     }
-    
+
     [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
@@ -87,7 +85,7 @@ public class CustomerController : Controller
         Customer customer)
     {
         if (!ModelState.IsValid) return View(customer);
-        
+
         _context.Add(customer);
         await _context.SaveChangesAsync();
         SetCustomers();
@@ -137,7 +135,7 @@ public class CustomerController : Controller
         var customer = GetCustomers().FirstOrDefault(c => c.CustomerId == id);
         return customer == null ? NotFound() : View(customer);
     }
-    
+
     [HttpPost]
     [ActionName("Delete")]
     [ValidateAntiForgeryToken]
@@ -159,17 +157,26 @@ public class CustomerController : Controller
 
     private static IEnumerable<Customer> Sort_Search(IEnumerable<Customer> customers, string companyName,
         string representativeLastName, string representativeFirstName,
-        string representativeMiddleName, string phoneNumber, string address)
+        string representativeMiddleName, string phoneNumber, string address, string sortOrder = "")
     {
         customers = customers.Where(c => c.CompanyName.Contains(companyName ?? "", StringComparison.OrdinalIgnoreCase)
-                                         && c.RepresentativeLastName.Contains(representativeLastName ?? "", StringComparison.OrdinalIgnoreCase)
-                                         && c.RepresentativeFirstName.Contains(representativeFirstName ?? "", StringComparison.OrdinalIgnoreCase)
-                                         && c.RepresentativeMiddleName.Contains(representativeMiddleName ?? "", StringComparison.OrdinalIgnoreCase)
-                                         && c.PhoneNumber.Contains(phoneNumber ?? "", StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeLastName.Contains(representativeLastName ?? "",
+                                             StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeFirstName.Contains(representativeFirstName ?? "",
+                                             StringComparison.OrdinalIgnoreCase)
+                                         && c.RepresentativeMiddleName.Contains(representativeMiddleName ?? "",
+                                             StringComparison.OrdinalIgnoreCase)
+                                         && c.PhoneNumber.Contains(phoneNumber ?? "",
+                                             StringComparison.OrdinalIgnoreCase)
                                          && c.Address.Contains(address ?? "", StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrEmpty(sortOrder))
+        {
+            customers = customers.AsQueryable().OrderBy(sortOrder);
+        }
         return customers;
     }
-    
+
     public IEnumerable<Customer> GetCustomers()
     {
         return _cache.Get();

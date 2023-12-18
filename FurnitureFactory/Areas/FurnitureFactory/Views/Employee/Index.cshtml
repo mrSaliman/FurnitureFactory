@@ -32,19 +32,29 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.LastName)
+            <a asp-action="Index" asp-route-sortField="LastName">
+                @Html.DisplayNameFor(model => model.LastName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.FirstName)
+            <a asp-action="Index" asp-route-sortField="FirstName">
+                @Html.DisplayNameFor(model => model.FirstName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.MiddleName)
+            <a asp-action="Index" asp-route-sortField="MiddleName">
+                @Html.DisplayNameFor(model => model.MiddleName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Position)
+            <a asp-action="Index" asp-route-sortField="Position">
+                @Html.DisplayNameFor(model => model.Position)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Education)
+            <a asp-action="Index" asp-route-sortField="Education">
+                @Html.DisplayNameFor(model => model.Education)
+            </a>
         </th>
         <th></th>
     </tr>

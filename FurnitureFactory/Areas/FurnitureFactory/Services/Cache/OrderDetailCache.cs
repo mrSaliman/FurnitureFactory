@@ -3,7 +3,7 @@ using FurnitureFactory.Areas.FurnitureFactory.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace FurnitureFactory.Areas.FurnitureFactory.Services;
+namespace FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 
 public class OrderDetailCache : CacheService
 {

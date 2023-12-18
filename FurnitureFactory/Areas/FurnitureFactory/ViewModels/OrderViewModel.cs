@@ -7,6 +7,7 @@ public class OrderViewModel
     public IEnumerable<Order> Orders { get; set; }
 
     public PageViewModel PageViewModel { get; set; }
+    public SortViewModel? SortViewModel { get; set; }
 
     public DateTime? OrderDate { get; set; }
 

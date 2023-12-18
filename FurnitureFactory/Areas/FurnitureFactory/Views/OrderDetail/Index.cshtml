@@ -32,13 +32,19 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.Quantity)
+            <a asp-action="Index" asp-route-sortField="Quantity">
+                @Html.DisplayNameFor(model => model.Quantity)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.FurnitureName)
+            <a asp-action="Index" asp-route-sortField="Furniture.FurnitureName">
+                @Html.DisplayNameFor(model => model.FurnitureName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.OrderDate)
+            <a asp-action="Index" asp-route-sortField="Order.OrderDate">
+                @Html.DisplayNameFor(model => model.OrderDate)
+            </a>
         </th>
         <th></th>
     </tr>

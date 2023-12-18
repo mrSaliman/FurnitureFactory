@@ -34,19 +34,29 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.FurnitureName)
+            <a asp-action="Index" asp-route-sortField="FurnitureName">
+                @Html.DisplayNameFor(model => model.FurnitureName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Description)
+            <a asp-action="Index" asp-route-sortField="Description">
+                @Html.DisplayNameFor(model => model.Description)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.MaterialType)
+            <a asp-action="Index" asp-route-sortField="MaterialType">
+                @Html.DisplayNameFor(model => model.MaterialType)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Price)
+            <a asp-action="Index" asp-route-sortField="Price">
+                @Html.DisplayNameFor(model => model.Price)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.QuantityOnHand)
+            <a asp-action="Index" asp-route-sortField="QuantityOnHand">
+                @Html.DisplayNameFor(model => model.QuantityOnHand)
+            </a>
         </th>
         <th></th>
     </tr>

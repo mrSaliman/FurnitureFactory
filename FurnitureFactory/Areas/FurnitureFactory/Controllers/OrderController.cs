@@ -2,12 +2,14 @@ using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
 using FurnitureFactory.Areas.FurnitureFactory.Services;
+using FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq.Dynamic.Core;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -26,29 +28,25 @@ public class OrderController : Controller
     }
 
     [Authorize(Roles = "Admin,User,SuperUser")]
-    public IActionResult Index(int page = 1)
+    public IActionResult Index(string sortField = "", int page = 1)
     {
         var order = HttpContext.Session.Get<OrderViewModel>("Order") ?? new OrderViewModel();
+        order.SortViewModel ??= new SortViewModel("", true);
+        var sortOrder = order.SortViewModel.GetOrientedSortOrder(sortField);
+        
         var orders = GetOrders();
         orders = Sort_Search(orders, order.OrderDate, order.SpecialDiscount, order.IsCompleted,
-            order.ResponsibleEmployeeFirstName, order.CustomerCompanyName);
+            order.ResponsibleEmployeeFirstName, order.CustomerCompanyName, sortOrder);
         // Разбиение на страницы
         var ordersPage = orders.ToList();
         var count = ordersPage.Count;
         orders = ordersPage.Skip((page - 1) * PageSize).Take(PageSize);
 
+        order.PageViewModel = new PageViewModel(count, page, PageSize);
+        HttpContext.Session.Set("Order", order);
+        order.Orders = orders;
 
-        var orderViewModel = new OrderViewModel
-        {
-            Orders = orders,
-            PageViewModel = new PageViewModel(count, page, PageSize),
-            OrderDate = order.OrderDate,
-            SpecialDiscount = order.SpecialDiscount,
-            IsCompleted = order.IsCompleted,
-            ResponsibleEmployeeFirstName = order.ResponsibleEmployeeFirstName,
-            CustomerCompanyName = order.CustomerCompanyName
-        };
-        return View(orderViewModel);
+        return View(order);
     }
 
     [HttpPost]
@@ -176,7 +174,7 @@ public class OrderController : Controller
 
     private static IEnumerable<Order> Sort_Search(IEnumerable<Order> orders, DateTime? orderDate,
         decimal specialDiscount,
-        bool isCompleted, string responsibleEmployeeFirstName, string customerCompanyName)
+        bool isCompleted, string responsibleEmployeeFirstName, string customerCompanyName, string sortOrder)
     {
         orders = orders.Where(c => (c.OrderDate.Date == orderDate || orderDate == new DateTime() || orderDate == null)
                                    && (c.SpecialDiscount == specialDiscount || specialDiscount == 0)
@@ -185,6 +183,11 @@ public class OrderController : Controller
                                    && c.IsCompleted == isCompleted
                                    && c.Customer.CompanyName.Contains(customerCompanyName ?? "",
                                        StringComparison.OrdinalIgnoreCase));
+        
+        if (!string.IsNullOrEmpty(sortOrder))
+        {
+            orders = orders.AsQueryable().OrderBy(sortOrder);
+        }
         return orders;
     }
 

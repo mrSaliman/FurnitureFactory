@@ -33,22 +33,34 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.CompanyName)
+            <a asp-action="Index" asp-route-sortField="CompanyName">
+                @Html.DisplayNameFor(model => model.CompanyName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.RepresentativeLastName)
+            <a asp-action="Index" asp-route-sortField="RepresentativeLastName">
+                @Html.DisplayNameFor(model => model.RepresentativeLastName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.RepresentativeFirstName)
+            <a asp-action="Index" asp-route-sortField="RepresentativeFirstName">
+                @Html.DisplayNameFor(model => model.RepresentativeFirstName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.RepresentativeMiddleName)
+            <a asp-action="Index" asp-route-sortField="RepresentativeMiddleName">
+                @Html.DisplayNameFor(model => model.RepresentativeMiddleName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.PhoneNumber)
+            <a asp-action="Index" asp-route-sortField="PhoneNumber">
+                @Html.DisplayNameFor(model => model.PhoneNumber)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Address)
+            <a asp-action="Index" asp-route-sortField="Address">
+                @Html.DisplayNameFor(model => model.Address)
+            </a>
         </th>
         <th></th>
     </tr>

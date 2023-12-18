@@ -1,14 +1,14 @@
 ﻿using FurnitureFactory.Areas.FurnitureFactory.Data;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace FurnitureFactory.Areas.FurnitureFactory.Services;
+namespace FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 
 public abstract class CacheService
 {
     protected readonly IMemoryCache Cache;
     protected readonly AcmeDataContext Context;
     protected readonly List<CacheService> Children;
-    protected readonly int SaveTime = 2 * 12 * 240;
+    protected const int SaveTime = 2 * 12 * 240;
 
     protected CacheService(IMemoryCache cache, AcmeDataContext context)
     {
@@ -23,9 +23,6 @@ public abstract class CacheService
     public void Update()
     {
         Set();
-        foreach (var cacheService in Children)
-        {
-            cacheService.Update();
-        }
+        foreach (var cacheService in Children) cacheService.Update();
     }
 }

@@ -35,19 +35,29 @@
     <thead>
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.OrderDate)
+            <a asp-action="Index" asp-route-sortField="OrderDate">
+                @Html.DisplayNameFor(model => model.OrderDate)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.SpecialDiscount)
+            <a asp-action="Index" asp-route-sortField="SpecialDiscount">
+                @Html.DisplayNameFor(model => model.SpecialDiscount)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.IsCompleted)
+            <a asp-action="Index" asp-route-sortField="IsCompleted">
+                @Html.DisplayNameFor(model => model.IsCompleted)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.CustomerCompanyName)
+            <a asp-action="Index" asp-route-sortField="Customer.CompanyName">
+                @Html.DisplayNameFor(model => model.CustomerCompanyName)
+            </a>
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.ResponsibleEmployeeFirstName)
+            <a asp-action="Index" asp-route-sortField="ResponsibleEmployee.FirstName">
+                @Html.DisplayNameFor(model => model.ResponsibleEmployeeFirstName)
+            </a>
         </th>
         <th></th>
     </tr>

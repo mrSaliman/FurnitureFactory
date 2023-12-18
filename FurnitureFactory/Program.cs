@@ -1,6 +1,7 @@
 using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Middleware;
 using FurnitureFactory.Areas.FurnitureFactory.Services;
+using FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 using FurnitureFactory.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

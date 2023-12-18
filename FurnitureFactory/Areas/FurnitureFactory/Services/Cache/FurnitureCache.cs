@@ -2,11 +2,12 @@
 using FurnitureFactory.Areas.FurnitureFactory.Models;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace FurnitureFactory.Areas.FurnitureFactory.Services;
+namespace FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 
 public class FurnitureCache : CacheService
 {
-    public FurnitureCache(IMemoryCache cache, AcmeDataContext context, OrderDetailCache orderDetailCache) : base(cache, context)
+    public FurnitureCache(IMemoryCache cache, AcmeDataContext context, OrderDetailCache orderDetailCache) : base(cache,
+        context)
     {
         Children.Add(orderDetailCache);
     }

@@ -2,12 +2,14 @@ using FurnitureFactory.Areas.FurnitureFactory.Data;
 using FurnitureFactory.Areas.FurnitureFactory.Filters;
 using FurnitureFactory.Areas.FurnitureFactory.Models;
 using FurnitureFactory.Areas.FurnitureFactory.Services;
+using FurnitureFactory.Areas.FurnitureFactory.Services.Cache;
 using FurnitureFactory.Areas.FurnitureFactory.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Linq.Dynamic.Core;
 
 namespace FurnitureFactory.Areas.FurnitureFactory.Controllers;
 
@@ -26,36 +28,40 @@ public class OrderDetailController : Controller
     }
 
     [Authorize(Roles = "Admin,User,SuperUser")]
-    public IActionResult Index(int page = 1)
+    public IActionResult Index(string sortField = "", int page = 1)
     {
         var orderDetail = HttpContext.Session.Get<OrderDetailViewModel>("OrderDetail") ?? new OrderDetailViewModel();
+        orderDetail.SortViewModel ??= new SortViewModel("", true);
+        var sortOrder = orderDetail.SortViewModel.GetOrientedSortOrder(sortField);
+        
         var orderDetails = GetOrderDetails();
-        orderDetails = Sort_Search(orderDetails, orderDetail.OrderDate, orderDetail.FurnitureName, orderDetail.Quantity);
+        orderDetails = Sort_Search(orderDetails, orderDetail.OrderDate, orderDetail.FurnitureName,
+            orderDetail.Quantity, sortOrder);
+        
         // Разбиение на страницы
         var ordersPage = orderDetails.ToList();
         var count = ordersPage.Count;
         orderDetails = ordersPage.Skip((page - 1) * PageSize).Take(PageSize);
 
-
-        var orderDetailViewModel = new OrderDetailViewModel
-        {
-            OrderDetails = orderDetails,
-            PageViewModel = new PageViewModel(count, page, PageSize),
-            OrderDate = orderDetail.OrderDate,
-            FurnitureName = orderDetail.FurnitureName,
-            Quantity = orderDetail.Quantity
-        };
-        return View(orderDetailViewModel);
+        orderDetail.PageViewModel = new PageViewModel(count, page, PageSize);
+        HttpContext.Session.Set("OrderDetail", orderDetail);
+        orderDetail.OrderDetails = orderDetails;
+        
+        return View(orderDetail);
     }
 
     private static IEnumerable<OrderDetail> Sort_Search(IEnumerable<OrderDetail> orderDetails,
-        DateTime? orderDate, string furnitureName, int quantity)
+        DateTime? orderDate, string furnitureName, int quantity, string sortOrder)
     {
         orderDetails = orderDetails.Where(od =>
             (od.Order.OrderDate.Date == orderDate || orderDate == new DateTime() || orderDate == null)
             && od.Furniture.FurnitureName.Contains(furnitureName ?? "", StringComparison.OrdinalIgnoreCase)
             && (od.Quantity == quantity || quantity == 0));
-
+        
+        if (!string.IsNullOrEmpty(sortOrder))
+        {
+            orderDetails = orderDetails.AsQueryable().OrderBy(sortOrder);
+        }
         return orderDetails;
     }
 
@@ -67,7 +73,7 @@ public class OrderDetailController : Controller
 
         return RedirectToAction("Index");
     }
-    
+
     [Authorize(Roles = "Admin,User,SuperUser")]
     public IActionResult Details(int? id)
     {
@@ -100,7 +106,7 @@ public class OrderDetailController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        ViewData["FurnitureId"] = 
+        ViewData["FurnitureId"] =
             new SelectList(_context.Furnitures, "FurnitureId", "FurnitureName", orderDetail.FurnitureId);
         ViewData["OrderId"] = new SelectList(_context.Orders, "OrderId", "OrderDate", orderDetail.OrderId);
         return View(orderDetail);
@@ -123,7 +129,8 @@ public class OrderDetailController : Controller
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin,SuperUser")]
     public async Task<IActionResult> Edit(int id,
-        [Bind("OrderDetailId,OrderId,FurnitureId,Quantity")] OrderDetail orderDetail)
+        [Bind("OrderDetailId,OrderId,FurnitureId,Quantity")]
+        OrderDetail orderDetail)
     {
         if (id != orderDetail.OrderDetailId) return NotFound();
 
@@ -180,7 +187,7 @@ public class OrderDetailController : Controller
     {
         return GetOrderDetails().Any(e => e.OrderDetailId == id);
     }
-    
+
     public IEnumerable<OrderDetail> GetOrderDetails()
     {
         return _cache.Get();
